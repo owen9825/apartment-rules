@@ -17,10 +17,15 @@
 \usepackage{tikz}
 \pagestyle{empty}
 \usepackage[a4paper,margin=0.5in]{geometry}
+\usepackage{totpages}
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \fancyhf{}
-\setlength{\headheight}{50pt} % Increased for better spacing
+\geometry{
+  includeheadfoot,
+  headheight=50pt,
+  footskip=30pt
+}
 
 \lhead{\fontsize{9}{11}\selectfont
 \textbf{Owners Corporation Rules} \\[2pt]
@@ -30,7 +35,6 @@
 % Remove the default header rule
 \renewcommand{\headrulewidth}{0pt}
 
-\usepackage{totpages}
 \rfoot{Page \thepage\ of \ref{TotPages}}  % Auto page numbers
 \begin{document}
 \definecolor{color_29791}{rgb}{0,0,0}
