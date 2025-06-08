@@ -4,6 +4,7 @@
 *.log
 *.out
 githash.tex
+replacement.tex
 
 # Output
 *.pdf
