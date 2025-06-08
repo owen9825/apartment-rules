@@ -1,0 +1,6 @@
+# LaTeX artifacts
+*.aux
+*.dvi
+*.log
+# Output
+*.pdf
