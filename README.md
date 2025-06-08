@@ -6,5 +6,5 @@ It is based on rules imposed on Brunswick Yard by The Knight and Ballarat Street
 ## Compiling
 To generate a PDF document from the LaTeX file, install [LaTeX](https://www.latex-project.org/about/) then run:
 ```shell
-pdflatex main.tex
+./render.sh
 ```

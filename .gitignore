@@ -2,5 +2,8 @@
 *.aux
 *.dvi
 *.log
+*.out
+githash.tex
+
 # Output
 *.pdf
