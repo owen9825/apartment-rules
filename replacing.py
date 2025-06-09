@@ -1,21 +1,23 @@
 import io
 import re
-from typing import Dict, List
+from typing import Dict
 
 matchers = [
     re.compile(r"(\{\\fontsize\{[0-9\.]+\}\{1\})([0-9]+\.)( +[^\}]+\})"),
     re.compile(r"(\{\\fontsize\{[0-9\.]+\}\{1\})([0-9]+\.[0-9]+\.)( +[^\}]+\})"),
-    re.compile(r"(\{\\fontsize\{[0-9\.]+\}\{1\})(\([a-z]{1}\))( +[^\}]+\})"),  # This overlaps with the Roman numerals
     re.compile(r"(\{\\fontsize\{[0-9\.]+\}\{1\})(\([0-9]{1,2}\))( +[^\}]+\})"),
+    re.compile(r"(\{\\fontsize\{[0-9\.]+\}\{1\})(\([a-z]{1}\))( +[^\}]+\})"),  # This overlaps with the Roman numerals
     re.compile(r"(\{\\fontsize\{[0-9\.]+\}\{1\})(\([ivx]+\))( +[^\}]+\})")  # Overlaps with Latin alphabet
 ]
+
+MAX_LATEX_DEPTH = 3
 
 itemization_style = {
     0: r"[label=\arabic*.]",
     1: r"[label=\arabic{enumi}.\arabic*.]",
     2: r"[label=(\arabic*)]",
     3: r"[label=(\alph*)]",
-    4: r"[label=(\roman*)]"
+    4: r"[label=(\roman*)]" # Too deep to use LaTeX's itemized lists.
 }
 
 MAX_DEPTH = list(itemization_style.keys())[-1]
@@ -23,7 +25,7 @@ MAX_DEPTH = list(itemization_style.keys())[-1]
 def close_current_lists(starting_depth: int, current_headings: Dict[int, bool], output_file: io.TextIOWrapper) -> None:
     for i in range(starting_depth, MAX_DEPTH + 1):
         # Close out all deeper levels of enumeration
-        if (current_headings).pop(i, None):
+        if (current_headings).pop(i, None) and i <= MAX_LATEX_DEPTH:
             output_file.write(r"\end{enumerate}" + "\n")
 
 def replace_integer_enumeration(input_file: io.TextIOWrapper, output_file: io.TextIOWrapper) -> None:
@@ -37,16 +39,21 @@ def replace_integer_enumeration(input_file: io.TextIOWrapper, output_file: io.Te
             matcher = matchers[lvl]
             matched = matcher.match(line)
             if matched:
-                if not line_depth:
-                    # Avoid closing deeper levels if this line was itself such a deeper level
-                    line_depth = lvl
-                    close_current_lists(lvl + 1, current_headings, output_file)
-                replacement_line = f"\\item {matched.group(1)}{matched.group(3)}\n"
+                line_depth = lvl
+                # Close deeper levels, as they've been abandoned
+                close_current_lists(lvl + 1, current_headings, output_file)
+                if lvl <= MAX_LATEX_DEPTH:
+                    replacement_line = f"\\item {matched.group(1)}{matched.group(3)}\n"
+                else:
+                    replacement_line = line
                 if not current_headings.get(lvl):
                     # Begin the list
-                    output_file.write(r"\begin{enumerate}" + itemization_style[lvl] + "\n")
+                    if lvl <= MAX_LATEX_DEPTH:
+                        output_file.write(r"\begin{enumerate}" + itemization_style[lvl] + "\n")
+                    current_headings[lvl] = True
                 output_file.write(replacement_line)
-        if not line_depth:
+                break  # No need to consider higher-level enumerations
+        if line_depth is None:
             output_file.write(line)
 
 def replace_lines_in_files(input_filename: str, output_filename: str) -> None:
